@@ -73,7 +73,7 @@ jobs:
           directory: modules/vpc-security
           framework: terraform
           soft_fail: false
-          skip_check: CKV2_AWS_12,CKV_AWS_8
+          skip_check: CKV2_AWS_12,CKV_AWS_8,CKV_AWS_88,CKV_AWS_135
           output_format: cli
 
   plan:

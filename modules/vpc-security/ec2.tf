@@ -25,6 +25,11 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids      = [aws_security_group.bastion.id]
   key_name                    = var.key_pair_name
   associate_public_ip_address = true
+  monitoring                  = true
+
+  metadata_options {
+    http_tokens = "required"
+  }
 
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-bastion"
@@ -38,6 +43,11 @@ resource "aws_instance" "app" {
   subnet_id              = aws_subnet.app_a.id
   vpc_security_group_ids = [aws_security_group.app.id]
   key_name               = var.key_pair_name
+  monitoring             = true
+
+  metadata_options {
+    http_tokens = "required"
+  }
 
   tags = merge(local.common_tags, {
     Name = "${var.project_name}-app"
@@ -51,6 +61,11 @@ resource "aws_instance" "data" {
   subnet_id              = aws_subnet.data_a.id
   vpc_security_group_ids = [aws_security_group.data.id]
   key_name               = var.key_pair_name
+  monitoring             = true
+
+  metadata_options {
+    http_tokens = "required"
+  }
 
   user_data = <<-EOF
     #!/bin/bash
