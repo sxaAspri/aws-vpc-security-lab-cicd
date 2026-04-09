@@ -2,7 +2,7 @@
 # .github/workflows/pipeline.yml
 # Secure CI/CD pipeline for Terraform IaC
 # Auth: OIDC (no static credentials)
-# Stages: validate → plan → apply (dev auto, prod manual)
+# Stages: validate → security-scan → plan → apply
 # ==============================================================================
 
 name: Terraform CI/CD
@@ -17,7 +17,7 @@ on:
       - main
 
 permissions:
-  id-token: write   # Required for OIDC
+  id-token: write
   contents: read
 
 env:
@@ -27,9 +27,6 @@ env:
   AWS_ROLE_ARN: "arn:aws:iam::474945406391:role/github-actions-vpc-security"
 
 jobs:
-  # ----------------------------------------------------------------------------
-  # JOB 1 — Validate: fmt + validate (runs on every push and PR)
-  # ----------------------------------------------------------------------------
   validate:
     name: Validate
     runs-on: ubuntu-latest
@@ -61,13 +58,28 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform validate
 
-  # ----------------------------------------------------------------------------
-  # JOB 2 — Plan: show changes before applying (runs on every push and PR)
-  # ----------------------------------------------------------------------------
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: modules/vpc-security
+          framework: terraform
+          soft_fail: false
+          skip_check: CKV2_AWS_12,CKV_AWS_8
+          output_format: cli
+
   plan:
     name: Plan
     runs-on: ubuntu-latest
-    needs: validate
+    needs: security-scan
 
     steps:
       - name: Checkout code
@@ -92,9 +104,6 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform plan -var="allowed_ssh_cidr=${{ secrets.ALLOWED_SSH_CIDR }}"
 
-  # ----------------------------------------------------------------------------
-  # JOB 3 — Apply: only on push to main (not on PRs)
-  # ----------------------------------------------------------------------------
   apply:
     name: Apply
     runs-on: ubuntu-latest
