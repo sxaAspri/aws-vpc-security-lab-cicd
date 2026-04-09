@@ -1,0 +1,27 @@
+# Local Terraform state — never commit, use remote backend
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+
+# Terraform plan files — may contain sensitive values
+tfplan
+*.tfplan
+
+# Variable files that may contain secrets (IPs, keys)
+*.tfvars
+*.tfvars.json
+
+# Exception: commit example tfvars for documentation
+!*.tfvars.example
+
+# Terraform internals
+.terraform/
+.terraform.lock.hcl
+
+# SSH keys — never commit
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
